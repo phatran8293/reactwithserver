@@ -1,6 +1,4 @@
 import React, { Component } from "react";
-import Navbar from "./components/navbar";
-import Counters from "./components/counters";
 import axios from "axios";
 
 class App extends Component {
@@ -11,16 +9,43 @@ class App extends Component {
   constructor() {
     console.log("App - Constructor");
     super();
+    this.name = React.createRef();
+    this.age = React.createRef();
   }
 
   componentDidMount() {
     // Ajax Call
     console.log("App - Mount");
     axios.get("http://localhost:8080/students").then(res => {
-      const student = res.data;
-      this.setState({ students: student });
+      const students = res.data;
+      this.setState({ students });
     });
   }
+
+  onSubmit = e => {
+    e.preventDefault();
+    console.log(this);
+    const student = {
+      name: this.name.current.value,
+      age: this.age.current.value
+    };
+
+    let headers = {
+      "Content-Type": "application/json"
+    };
+
+    axios
+      .post(`http://localhost:8080/student/add`, JSON.stringify(student), {
+        headers: headers
+      })
+      .then(res => {
+        student.id = res.data;
+        let studentList = [...this.state.students];
+        studentList.push(student);
+        this.setState({ students: studentList });
+        document.getElementById("create-student-form").reset();
+      });
+  };
 
   render() {
     console.log("App - Render");
@@ -44,31 +69,33 @@ class App extends Component {
             ))}
           </tbody>
         </table>
-
-        <form>
-          <table>
-            <tbody>
-              <tr>
-                <td>Name</td>
-                <td>
-                  <input type="text" name="name" required />
-                </td>
-              </tr>
-              <tr>
-                <td>Age</td>
-                <td>
-                  <input type="text" name="age" required />
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <input type="submit" value="Submit" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <form
+          id="create-student-form"
+          onSubmit={event => this.onSubmit(event)}
+          className="form-signin"
+        >
+          <div className="form-group w-25">
+            <label>Name: </label>
+            <input
+              type="text"
+              name="age"
+              className="form-control"
+              ref={this.name}
+            />
+          </div>
+          <div className="form-group w-25">
+            <label>Age: </label>
+            <input
+              type="text"
+              name="name"
+              className="form-control"
+              ref={this.age}
+            />
+          </div>
+          <div className="form-group">
+            <input type="submit" value="ADD" className="btn btn-primary" />
+          </div>
         </form>
-
       </React.Fragment>
     );
   }
